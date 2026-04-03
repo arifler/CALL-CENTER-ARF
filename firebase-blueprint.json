@@ -1,0 +1,39 @@
+{
+  "entities": {
+    "Lead": {
+      "title": "Lead",
+      "description": "A potential customer lead with contact info and status.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Lead's full name" },
+        "phone": { "type": "string", "description": "Lead's phone number" },
+        "assignedTo": { "type": "string", "description": "The name of the user this lead is assigned to" },
+        "status": { "type": "string", "enum": ["pending", "negative", "undecided", "positive"], "description": "Current status of the lead" },
+        "mulahaza": { "type": "string", "description": "Notes or remarks about the lead" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "phone", "assignedTo", "status"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A system user (admin or agent).",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "User's display name" },
+        "role": { "type": "string", "enum": ["admin", "agent"], "description": "User's role in the system" }
+      },
+      "required": ["name", "role"]
+    }
+  },
+  "firestore": {
+    "/leads/{leadId}": {
+      "schema": "Lead",
+      "description": "Collection of all leads"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Collection of system users"
+    }
+  }
+}

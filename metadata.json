@@ -1,0 +1,5 @@
+{
+  "name": "Call Center Panel",
+  "description": "A call center management panel with user-based lead assignment, Excel data import, and status tracking (Negative, Undecided, Positive).",
+  "requestFramePermissions": []
+}
