@@ -6,6 +6,8 @@
       "type": "object",
       "properties": {
         "name": { "type": "string", "description": "Lead's full name" },
+        "year": { "type": "string", "description": "The year associated with the lead" },
+        "sacrificeType": { "type": "string", "description": "The type of sacrifice (Kurban Türü)" },
         "phone": { "type": "string", "description": "Lead's phone number" },
         "assignedTo": { "type": "string", "description": "The name of the user this lead is assigned to" },
         "status": { "type": "string", "enum": ["pending", "negative", "undecided", "positive"], "description": "Current status of the lead" },

@@ -38,7 +38,7 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
 
   const downloadTemplate = () => {
     const ws = XLSX.utils.json_to_sheet([
-      { 'İsim': '', 'Telefon': '', 'Kullanıcı': '', 'Mülahaza': '' }
+      { 'İsim': '', 'Yıl': '', 'Kurban Türü': '', 'Telefon': '', 'Kullanıcı': '', 'Mülahaza': '' }
     ]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Şablon");
@@ -63,15 +63,19 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
         const userSet = new Set(users.map(u => u.name));
 
         for (const row of data) {
-          const name = row['İsim'] || row['Name'] || '';
-          const phone = row['Telefon'] || row['Phone'] || '';
-          const assignedTo = row['Kullanıcı'] || row['User'] || 'Admin';
-          const mulahaza = row['Mülahaza'] || row['Mulahaza'] || row['Note'] || '';
+          const name = String(row['İsim'] || row['Name'] || '');
+          const year = String(row['Yıl'] || row['Year'] || '');
+          const sacrificeType = String(row['Kurban Türü'] || row['Sacrifice Type'] || row['Type'] || '');
+          const phone = String(row['Telefon'] || row['Phone'] || '');
+          const assignedTo = String(row['Kullanıcı'] || row['User'] || 'Admin');
+          const mulahaza = String(row['Mülahaza'] || row['Mulahaza'] || row['Note'] || '');
 
           if (name && phone) {
             const leadRef = doc(collection(db, 'leads'));
             batch.set(leadRef, {
               name,
+              year,
+              sacrificeType,
               phone: String(phone),
               assignedTo,
               mulahaza,
@@ -150,10 +154,12 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
 
   const filteredLeads = leads
     .filter(l => 
-      l.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      l.phone.includes(searchTerm) ||
-      l.assignedTo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (l.mulahaza && l.mulahaza.toLowerCase().includes(searchTerm.toLowerCase()))
+      (l.name && String(l.name).toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (l.phone && String(l.phone).includes(searchTerm)) ||
+      (l.assignedTo && String(l.assignedTo).toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (l.year && String(l.year).toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (l.sacrificeType && String(l.sacrificeType).toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (l.mulahaza && String(l.mulahaza).toLowerCase().includes(searchTerm.toLowerCase()))
     )
     .sort((a, b) => {
       const priority: Record<LeadStatus, number> = {
@@ -280,6 +286,8 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">İsim</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Yıl</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Kurban Türü</th>
                   <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Telefon</th>
                   <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Atanan</th>
                   <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Mülahaza</th>
@@ -291,6 +299,8 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
                 {filteredLeads.map((lead) => (
                   <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 font-medium text-gray-900">{lead.name}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{lead.year || '-'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{lead.sacrificeType || '-'}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-2">
                         <span className={cn(
@@ -363,7 +373,7 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
                 ))}
                 {filteredLeads.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
                       Kayıt bulunamadı.
                     </td>
                   </tr>

@@ -3,6 +3,8 @@ export type LeadStatus = 'pending' | 'negative' | 'undecided' | 'positive';
 export interface Lead {
   id?: string;
   name: string;
+  year?: string;
+  sacrificeType?: string;
   phone: string;
   assignedTo: string; // User name
   status: LeadStatus;
