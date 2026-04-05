@@ -66,7 +66,8 @@ export default function AgentPanel({ user, onLogout }: AgentPanelProps) {
 
   const filteredLeads = leads
     .filter(l => 
-      (l.name && String(l.name).toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (l.sacrificeOwner && String(l.sacrificeOwner).toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (l.payer && String(l.payer).toLowerCase().includes(searchTerm.toLowerCase())) ||
       (l.phone && String(l.phone).includes(searchTerm)) ||
       (l.year && String(l.year).toLowerCase().includes(searchTerm.toLowerCase())) ||
       (l.sacrificeType && String(l.sacrificeType).toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -145,7 +146,8 @@ export default function AgentPanel({ user, onLogout }: AgentPanelProps) {
             <table className="w-full text-left">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">İsim</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Kurban Sahibi</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Ödeyen</th>
                   <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Yıl</th>
                   <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Kurban Türü</th>
                   <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Telefon</th>
@@ -156,7 +158,8 @@ export default function AgentPanel({ user, onLogout }: AgentPanelProps) {
               <tbody className="divide-y divide-gray-200">
                 {filteredLeads.map((lead) => (
                   <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-gray-900">{lead.name}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900">{lead.sacrificeOwner}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{lead.payer || '-'}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{lead.year || '-'}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{lead.sacrificeType || '-'}</td>
                     <td className="px-6 py-4">
@@ -207,7 +210,7 @@ export default function AgentPanel({ user, onLogout }: AgentPanelProps) {
                 ))}
                 {filteredLeads.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                       Gösterilecek kayıt bulunamadı.
                     </td>
                   </tr>

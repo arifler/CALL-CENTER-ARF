@@ -5,7 +5,8 @@
       "description": "A potential customer lead with contact info and status.",
       "type": "object",
       "properties": {
-        "name": { "type": "string", "description": "Lead's full name" },
+        "sacrificeOwner": { "type": "string", "description": "The person for whom the sacrifice is made" },
+        "payer": { "type": "string", "description": "The person who pays for the sacrifice" },
         "year": { "type": "string", "description": "The year associated with the lead" },
         "sacrificeType": { "type": "string", "description": "The type of sacrifice (Kurban Türü)" },
         "phone": { "type": "string", "description": "Lead's phone number" },
@@ -15,7 +16,7 @@
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["name", "phone", "assignedTo", "status"]
+      "required": ["sacrificeOwner", "phone", "assignedTo", "status"]
     },
     "User": {
       "title": "User",
