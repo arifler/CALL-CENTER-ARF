@@ -157,7 +157,16 @@ export default function AgentPanel({ user, onLogout }: AgentPanelProps) {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredLeads.map((lead) => (
-                  <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
+                  <tr 
+                    key={lead.id} 
+                    className={cn(
+                      "transition-colors",
+                      lead.status === 'positive' && "bg-green-50 hover:bg-green-100",
+                      lead.status === 'undecided' && "bg-orange-50 hover:bg-orange-100",
+                      lead.status === 'negative' && "bg-red-50 hover:bg-red-100",
+                      lead.status === 'pending' && "hover:bg-gray-50"
+                    )}
+                  >
                     <td className="px-6 py-4 font-medium text-gray-900">{lead.sacrificeOwner}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{lead.payer || '-'}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{lead.year || '-'}</td>

@@ -3,7 +3,7 @@ import { collection, onSnapshot, query, orderBy, serverTimestamp, writeBatch, do
 import { db } from '../firebase';
 import { Lead, User, LeadStatus } from '../types';
 import * as XLSX from 'xlsx';
-import { Upload, Users, CheckCircle, XCircle, Clock, Search, LogOut, Download, Trash2, AlertCircle, Phone, UserCircle } from 'lucide-react';
+import { Upload, Users, CheckCircle, XCircle, Clock, Search, LogOut, Download, Trash2, AlertCircle, Phone, UserCircle, Pencil, Check } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface AdminPanelProps {
@@ -20,6 +20,7 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const [showUserManagement, setShowUserManagement] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [editingMulahazaId, setEditingMulahazaId] = useState<string | null>(null);
 
   useEffect(() => {
     const qLeads = query(collection(db, 'leads'), orderBy('createdAt', 'desc'));
@@ -372,7 +373,16 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredLeads.map((lead) => (
-                  <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
+                  <tr 
+                    key={lead.id} 
+                    className={cn(
+                      "transition-colors",
+                      lead.status === 'positive' && "bg-green-50 hover:bg-green-100",
+                      lead.status === 'undecided' && "bg-orange-50 hover:bg-orange-100",
+                      lead.status === 'negative' && "bg-red-50 hover:bg-red-100",
+                      lead.status === 'pending' && "hover:bg-gray-50"
+                    )}
+                  >
                     <td className="px-6 py-4 font-medium text-gray-900">{lead.sacrificeOwner}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{lead.payer || '-'}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{lead.year || '-'}</td>
@@ -407,12 +417,37 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
                       </select>
                     </td>
                     <td className="px-6 py-2">
-                      <textarea
-                        placeholder="Not ekle..."
-                        className="w-full px-2 py-1 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm h-8 resize-y"
-                        value={lead.mulahaza || ''}
-                        onChange={(e) => updateMulahaza(lead.id!, e.target.value)}
-                      />
+                      {editingMulahazaId === lead.id ? (
+                        <div className="flex items-center gap-2">
+                          <textarea
+                            autoFocus
+                            placeholder="Not ekle..."
+                            className="flex-1 px-2 py-1 bg-white border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm h-12 resize-y"
+                            value={lead.mulahaza || ''}
+                            onChange={(e) => updateMulahaza(lead.id!, e.target.value)}
+                            onBlur={() => setEditingMulahazaId(null)}
+                          />
+                          <button 
+                            onClick={() => setEditingMulahazaId(null)}
+                            className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between group min-h-[2.5rem]">
+                          <span className="text-sm text-gray-600 max-w-[200px] truncate">
+                            {lead.mulahaza || '-'}
+                          </span>
+                          <button 
+                            onClick={() => setEditingMulahazaId(lead.id!)}
+                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                            title="Düzenle"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <select
