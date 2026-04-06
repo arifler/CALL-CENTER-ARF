@@ -253,6 +253,21 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
 
   const uniqueYears = Array.from(new Set(leads.map(l => l.year).filter(Boolean))).sort((a, b) => String(b).localeCompare(String(a)));
 
+  const userStats = users.map(u => {
+    const userLeads = leads.filter(l => l.assignedTo === u.name);
+    const total = userLeads.length;
+    const processed = userLeads.filter(l => l.status !== 'pending').length;
+    const percentage = total > 0 ? Math.round((processed / total) * 100) : 0;
+    return { name: u.name, total, processed, percentage };
+  }).sort((a, b) => b.percentage - a.percentage);
+
+  const adminLeads = leads.filter(l => l.assignedTo === 'Admin');
+  const adminTotal = adminLeads.length;
+  const adminProcessed = adminLeads.filter(l => l.status !== 'pending').length;
+  const adminPercentage = adminTotal > 0 ? Math.round((adminProcessed / adminTotal) * 100) : 0;
+  
+  const allUserStats = [{ name: 'Admin', total: adminTotal, processed: adminProcessed, percentage: adminPercentage }, ...userStats];
+
   const stats = {
     total: leads.length,
     positive: leads.filter(l => l.status === 'positive').length,
@@ -305,6 +320,46 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
           <div className="bg-red-50 p-6 rounded-2xl shadow-sm border border-red-100">
             <p className="text-sm text-red-600 mb-1 font-medium">Olumsuz</p>
             <p className="text-2xl font-bold text-red-700">{stats.negative}</p>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+            <Users className="w-5 h-5 mr-2 text-blue-600" />
+            Kullanıcı Performansı
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {allUserStats.map((u) => (
+              <div key={u.name} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <p className="font-bold text-gray-900">{u.name}</p>
+                    <p className="text-xs text-gray-500 uppercase tracking-wider">
+                      {u.processed} / {u.total} İşlem
+                    </p>
+                  </div>
+                  <div className={cn(
+                    "px-2 py-1 rounded-lg text-xs font-bold",
+                    u.percentage >= 80 ? "bg-green-100 text-green-700" :
+                    u.percentage >= 50 ? "bg-orange-100 text-orange-700" :
+                    "bg-gray-100 text-gray-700"
+                  )}>
+                    %{u.percentage}
+                  </div>
+                </div>
+                <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                  <div 
+                    className={cn(
+                      "h-full transition-all duration-500",
+                      u.percentage >= 80 ? "bg-green-500" :
+                      u.percentage >= 50 ? "bg-orange-500" :
+                      "bg-blue-500"
+                    )}
+                    style={{ width: `${u.percentage}%` }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

@@ -16,6 +16,8 @@ export default function Login({ onLogin }: LoginProps) {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    const isAdminAuthenticated = localStorage.getItem('admin_authenticated') === 'true';
+    
     const q = query(collection(db, 'users'), orderBy('name'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const userList = snapshot.docs.map(doc => ({
@@ -36,7 +38,10 @@ export default function Login({ onLogin }: LoginProps) {
   }, []);
 
   const handleUserClick = (user: User) => {
-    if (user.role === 'admin' || user.name.toLowerCase() === 'admin') {
+    const isAdmin = user.role === 'admin' || user.name.toLowerCase() === 'admin';
+    const isAlreadyAuthenticated = localStorage.getItem('admin_authenticated') === 'true';
+
+    if (isAdmin && !isAlreadyAuthenticated) {
       setShowPasswordModal(user);
       setPassword('');
       setError('');
@@ -49,6 +54,7 @@ export default function Login({ onLogin }: LoginProps) {
     e.preventDefault();
     if (password === '1842') {
       if (showPasswordModal) {
+        localStorage.setItem('admin_authenticated', 'true');
         onLogin(showPasswordModal);
       }
     } else {
