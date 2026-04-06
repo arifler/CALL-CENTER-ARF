@@ -21,6 +21,9 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
   const [showUserManagement, setShowUserManagement] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [editingMulahazaId, setEditingMulahazaId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
+  const [userFilter, setUserFilter] = useState<string>('all');
+  const [yearFilter, setYearFilter] = useState<string>('all');
 
   useEffect(() => {
     const qLeads = query(collection(db, 'leads'), orderBy('createdAt', 'desc'));
@@ -211,15 +214,22 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
   }, {} as Record<string, number>);
 
   const filteredLeads = leads
-    .filter(l => 
-      (l.sacrificeOwner && String(l.sacrificeOwner).toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (l.payer && String(l.payer).toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (l.phone && String(l.phone).includes(searchTerm)) ||
-      (l.assignedTo && String(l.assignedTo).toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (l.year && String(l.year).toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (l.sacrificeType && String(l.sacrificeType).toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (l.mulahaza && String(l.mulahaza).toLowerCase().includes(searchTerm.toLowerCase()))
-    )
+    .filter(l => {
+      const matchesSearch = 
+        (l.sacrificeOwner && String(l.sacrificeOwner).toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (l.payer && String(l.payer).toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (l.phone && String(l.phone).includes(searchTerm)) ||
+        (l.assignedTo && String(l.assignedTo).toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (l.year && String(l.year).toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (l.sacrificeType && String(l.sacrificeType).toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (l.mulahaza && String(l.mulahaza).toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesStatus = statusFilter === 'all' || l.status === statusFilter;
+      const matchesUser = userFilter === 'all' || l.assignedTo === userFilter;
+      const matchesYear = yearFilter === 'all' || l.year === yearFilter;
+
+      return matchesSearch && matchesStatus && matchesUser && matchesYear;
+    })
     .sort((a, b) => {
       const priority: Record<LeadStatus, number> = {
         'positive': 0,
@@ -240,6 +250,8 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
       const timeB = b.updatedAt?.toMillis?.() || 0;
       return timeB - timeA;
     });
+
+  const uniqueYears = Array.from(new Set(leads.map(l => l.year).filter(Boolean))).sort((a, b) => String(b).localeCompare(String(a)));
 
   const stats = {
     total: leads.length,
@@ -297,15 +309,52 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
         </div>
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input 
-              type="text"
-              placeholder="Kurban sahibi, ödeyen, telefon veya kullanıcı ara..."
-              className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="flex flex-col md:flex-row gap-3 flex-1 max-w-4xl">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input 
+                type="text"
+                placeholder="Kurban sahibi, ödeyen, telefon veya kullanıcı ara..."
+                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              className="px-4 py-2 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
+            >
+              <option value="all">Tüm Durumlar</option>
+              <option value="pending">Bekliyor</option>
+              <option value="positive">Olumlu</option>
+              <option value="undecided">Kararsız</option>
+              <option value="negative">Olumsuz</option>
+            </select>
+
+            <select
+              value={userFilter}
+              onChange={(e) => setUserFilter(e.target.value)}
+              className="px-4 py-2 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
+            >
+              <option value="all">Tüm Kullanıcılar</option>
+              <option value="Admin">Admin</option>
+              {users.map(u => (
+                <option key={u.id} value={u.name}>{u.name}</option>
+              ))}
+            </select>
+
+            <select
+              value={yearFilter}
+              onChange={(e) => setYearFilter(e.target.value)}
+              className="px-4 py-2 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
+            >
+              <option value="all">Tüm Yıllar</option>
+              {uniqueYears.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
           </div>
 
           <div className="flex items-center gap-3">
