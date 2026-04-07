@@ -3,7 +3,7 @@ import { collection, onSnapshot, query, orderBy, serverTimestamp, writeBatch, do
 import { db } from '../firebase';
 import { Lead, User, LeadStatus } from '../types';
 import * as XLSX from 'xlsx';
-import { Upload, Users, CheckCircle, XCircle, Clock, Search, LogOut, Download, Trash2, AlertCircle, Phone, UserCircle, Pencil, Check } from 'lucide-react';
+import { Upload, Users, CheckCircle, XCircle, Clock, Search, LogOut, Download, Trash2, AlertCircle, Phone, UserCircle, Pencil, Check, MessageCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface AdminPanelProps {
@@ -412,34 +412,38 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
             </select>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
             <button
               onClick={downloadData}
-              className="flex items-center justify-center px-4 py-2 bg-green-50 text-green-700 rounded-xl font-semibold hover:bg-green-100 transition-colors cursor-pointer"
+              className="flex items-center justify-center px-3 py-2 bg-green-50 text-green-700 rounded-xl font-semibold hover:bg-green-100 transition-colors cursor-pointer whitespace-nowrap text-sm"
+              title="Excel İndir"
             >
-              <Download className="w-5 h-5 mr-2" />
-              Excel İndir
+              <Download className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Excel İndir</span>
             </button>
 
             <button
               onClick={downloadTemplate}
-              className="flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors cursor-pointer"
+              className="flex items-center justify-center px-3 py-2 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors cursor-pointer whitespace-nowrap text-sm"
+              title="Şablon İndir"
             >
-              <Download className="w-5 h-5 mr-2" />
-              Şablon İndir
+              <Download className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Şablon İndir</span>
             </button>
 
             <button
               onClick={() => setShowBulkDeleteConfirm(true)}
-              className="flex items-center justify-center px-4 py-2 bg-red-50 text-red-600 rounded-xl font-semibold hover:bg-red-100 transition-colors cursor-pointer"
+              className="flex items-center justify-center px-3 py-2 bg-red-50 text-red-600 rounded-xl font-semibold hover:bg-red-100 transition-colors cursor-pointer whitespace-nowrap text-sm"
+              title="Tümünü Sil"
             >
-              <Trash2 className="w-5 h-5 mr-2" />
-              Tümünü Sil
+              <Trash2 className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Tümünü Sil</span>
             </button>
 
-            <label className="flex items-center justify-center px-6 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors cursor-pointer shadow-lg shadow-blue-200">
-              <Upload className="w-5 h-5 mr-2" />
-              {isUploading ? 'Yükleniyor...' : 'Excel Yükle'}
+            <label className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors cursor-pointer shadow-lg shadow-blue-200 whitespace-nowrap text-sm">
+              <Upload className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">{isUploading ? 'Yükleniyor...' : 'Excel Yükle'}</span>
+              <span className="md:hidden">{isUploading ? '...' : 'Yükle'}</span>
               <input 
                 type="file"
                 accept=".xlsx, .xls"
@@ -451,19 +455,170 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
 
             <button
               onClick={() => setShowUserManagement(true)}
-              className="flex items-center justify-center px-4 py-2 bg-purple-50 text-purple-600 rounded-xl font-semibold hover:bg-purple-100 transition-colors cursor-pointer"
+              className="flex items-center justify-center px-3 py-2 bg-purple-50 text-purple-600 rounded-xl font-semibold hover:bg-purple-100 transition-colors cursor-pointer whitespace-nowrap text-sm"
+              title="Kullanıcılar"
             >
-              <Users className="w-5 h-5 mr-2" />
-              Kullanıcılar
+              <Users className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Kullanıcılar</span>
             </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        {/* Mobile View (Cards) */}
+        <div className="md:hidden space-y-4">
+          {filteredLeads.map((lead, index) => (
+            <div 
+              key={lead.id}
+              className={cn(
+                "p-4 rounded-2xl border transition-all shadow-sm relative overflow-hidden",
+                lead.status === 'positive' && "bg-green-50 border-green-100",
+                lead.status === 'undecided' && "bg-orange-50 border-orange-100",
+                lead.status === 'negative' && "bg-red-50 border-red-100",
+                lead.status === 'pending' && "bg-white border-gray-100"
+              )}
+            >
+              <div className="absolute top-0 left-0 bg-gray-100 text-gray-400 text-[10px] px-1.5 py-0.5 rounded-br-lg font-mono">
+                #{index + 1}
+              </div>
+              <div className="flex justify-between items-start mb-3 pt-2">
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900 leading-tight">{lead.sacrificeOwner}</h3>
+                  <div className="flex flex-wrap gap-x-2 gap-y-1 mt-1">
+                    {lead.payer && <span className="text-xs text-gray-500">Ödeyen: {lead.payer}</span>}
+                    {lead.year && <span className="text-xs text-gray-500">Yıl: {lead.year}</span>}
+                    {lead.sacrificeType && <span className="text-xs text-gray-500">Tür: {lead.sacrificeType}</span>}
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <select
+                    value={lead.status}
+                    onChange={(e) => updateStatus(lead.id!, e.target.value as LeadStatus)}
+                    className={cn(
+                      "text-[10px] font-bold px-2 py-1 rounded-lg border outline-none",
+                      lead.status === 'positive' && "bg-white border-green-200 text-green-700",
+                      lead.status === 'undecided' && "bg-white border-orange-200 text-orange-700",
+                      lead.status === 'negative' && "bg-white border-red-200 text-red-700",
+                      lead.status === 'pending' && "bg-white border-gray-200 text-gray-700"
+                    )}
+                  >
+                    <option value="pending">Bekliyor</option>
+                    <option value="positive">Olumlu</option>
+                    <option value="undecided">Kararsız</option>
+                    <option value="negative">Olumsuz</option>
+                  </select>
+                  <select
+                    value={lead.assignedTo}
+                    onChange={(e) => updateAssignedTo(lead.id!, e.target.value)}
+                    className="text-[10px] font-medium px-2 py-1 bg-white text-gray-600 rounded-lg border border-gray-200 outline-none"
+                  >
+                    <option value="Admin">Admin</option>
+                    {users.map(u => (
+                      <option key={u.id} value={u.name}>{u.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between mb-3 bg-white/50 p-2 rounded-xl border border-black/5">
+                <div className="flex items-center space-x-2">
+                  <span className={cn(
+                    "text-sm font-bold",
+                    phoneCounts[lead.phone] > 1 ? "text-amber-600" : "text-gray-700"
+                  )}>
+                    +90 {lead.phone}
+                  </span>
+                  {phoneCounts[lead.phone] > 1 && (
+                    <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-md border border-amber-200">Tekrar</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <a 
+                    href={`https://wa.me/90${lead.phone}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-sm"
+                    title="WhatsApp"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                  </a>
+                  <a 
+                    href={`tel:+90${lead.phone}`}
+                    className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                  </a>
+                  {deleteConfirmId === lead.id ? (
+                    <div className="flex items-center gap-1">
+                      <button 
+                        onClick={() => deleteLead(lead.id!)}
+                        className="text-[10px] bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 font-bold"
+                      >
+                        Sil
+                      </button>
+                      <button 
+                        onClick={() => setDeleteConfirmId(null)}
+                        className="text-[10px] bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300"
+                      >
+                        X
+                      </button>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={() => setDeleteConfirmId(lead.id!)}
+                      className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="relative">
+                {editingMulahazaId === lead.id ? (
+                  <div className="flex items-center gap-2">
+                    <textarea
+                      autoFocus
+                      placeholder="Not ekle..."
+                      className="flex-1 px-3 py-2 bg-white border border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm h-20 resize-none"
+                      value={lead.mulahaza || ''}
+                      onChange={(e) => updateMulahaza(lead.id!, e.target.value)}
+                      onBlur={() => setEditingMulahazaId(null)}
+                    />
+                    <button 
+                      onClick={() => setEditingMulahazaId(null)}
+                      className="p-2 bg-green-50 text-green-600 rounded-xl hover:bg-green-100"
+                    >
+                      <Check className="w-5 h-5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div 
+                    onClick={() => setEditingMulahazaId(lead.id!)}
+                    className="flex items-start justify-between bg-white/80 p-3 rounded-xl border border-gray-100 min-h-[3rem] cursor-pointer"
+                  >
+                    <span className="text-sm text-gray-600 italic">
+                      {lead.mulahaza || 'Not eklemek için tıklayın...'}
+                    </span>
+                    <Pencil className="w-3.5 h-3.5 text-gray-400 mt-1" />
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+          {filteredLeads.length === 0 && (
+            <div className="bg-white p-8 rounded-2xl border border-gray-100 text-center text-gray-500">
+              Kayıt bulunamadı.
+            </div>
+          )}
+        </div>
+
+        {/* Desktop View (Table) */}
+        <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider w-12">#</th>
                   <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Kurban Sahibi</th>
                   <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Ödeyen</th>
                   <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Yıl</th>
@@ -476,7 +631,7 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredLeads.map((lead) => (
+                {filteredLeads.map((lead, index) => (
                   <tr 
                     key={lead.id} 
                     className={cn(
@@ -487,6 +642,7 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
                       lead.status === 'pending' && "hover:bg-gray-50"
                     )}
                   >
+                    <td className="px-6 py-4 text-sm text-gray-400 font-mono">{index + 1}</td>
                     <td className="px-6 py-4 font-medium text-gray-900">{lead.sacrificeOwner}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{lead.payer || '-'}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{lead.year || '-'}</td>
@@ -499,13 +655,24 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
                         )}>
                           +90 {lead.phone}
                         </span>
-                        <a 
-                          href={`tel:+90${lead.phone}`}
-                          className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
-                          title="Ara"
-                        >
-                          <Phone className="w-3.5 h-3.5" />
-                        </a>
+                        <div className="flex items-center gap-1">
+                          <a 
+                            href={`https://wa.me/90${lead.phone}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
+                            title="WhatsApp"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                          </a>
+                          <a 
+                            href={`tel:+90${lead.phone}`}
+                            className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                            title="Ara"
+                          >
+                            <Phone className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
