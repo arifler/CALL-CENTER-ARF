@@ -5,6 +5,7 @@ import { Lead, User, LeadStatus } from '../types';
 import * as XLSX from 'xlsx';
 import { Upload, Users, CheckCircle, XCircle, Clock, Search, LogOut, Download, Trash2, AlertCircle, Phone, UserCircle, Pencil, Check, MessageCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
+import Countdown from './Countdown';
 
 interface AdminPanelProps {
   user: User;
@@ -21,6 +22,7 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
   const [showUserManagement, setShowUserManagement] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [editingMulahazaId, setEditingMulahazaId] = useState<string | null>(null);
+  const [editingPhoneId, setEditingPhoneId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
   const [userFilter, setUserFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('all');
@@ -181,6 +183,18 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
     }
   };
 
+  const updatePhone = async (leadId: string, phone: string) => {
+    try {
+      const leadRef = doc(db, 'leads', leadId);
+      await updateDoc(leadRef, {
+        phone: phone.replace(/\s/g, ''),
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Update phone error:', error);
+    }
+  };
+
   const deleteUser = async (userId: string) => {
     try {
       await deleteDoc(doc(db, 'users', userId));
@@ -278,6 +292,7 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Countdown />
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -520,15 +535,38 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
               </div>
 
               <div className="flex items-center justify-between mb-3 bg-white/50 p-2 rounded-xl border border-black/5">
-                <div className="flex items-center space-x-2">
-                  <span className={cn(
-                    "text-sm font-bold",
-                    phoneCounts[lead.phone] > 1 ? "text-amber-600" : "text-gray-700"
-                  )}>
-                    +90 {lead.phone}
-                  </span>
-                  {phoneCounts[lead.phone] > 1 && (
-                    <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-md border border-amber-200">Tekrar</span>
+                <div className="flex items-center space-x-2 flex-1">
+                  {editingPhoneId === lead.id ? (
+                    <div className="flex items-center gap-1 w-full">
+                      <span className="text-xs text-gray-400">+90</span>
+                      <input
+                        autoFocus
+                        type="text"
+                        className="flex-1 px-2 py-1 bg-white border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold"
+                        value={lead.phone}
+                        onChange={(e) => updatePhone(lead.id!, e.target.value)}
+                        onBlur={() => setEditingPhoneId(null)}
+                      />
+                      <button 
+                        onClick={() => setEditingPhoneId(null)}
+                        className="p-1 bg-green-50 text-green-600 rounded-lg"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2 group cursor-pointer" onClick={() => setEditingPhoneId(lead.id!)}>
+                      <span className={cn(
+                        "text-sm font-bold",
+                        phoneCounts[lead.phone] > 1 ? "text-amber-600" : "text-gray-700"
+                      )}>
+                        +90 {lead.phone}
+                      </span>
+                      {phoneCounts[lead.phone] > 1 && (
+                        <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-md border border-amber-200">Tekrar</span>
+                      )}
+                      <Pencil className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
@@ -649,12 +687,35 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
                     <td className="px-6 py-4 text-sm text-gray-600">{lead.sacrificeType || '-'}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-2">
-                        <span className={cn(
-                          "text-gray-600 font-medium",
-                          phoneCounts[lead.phone] > 1 && "text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100"
-                        )}>
-                          +90 {lead.phone}
-                        </span>
+                        {editingPhoneId === lead.id ? (
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-gray-400">+90</span>
+                            <input
+                              autoFocus
+                              type="text"
+                              className="w-32 px-2 py-1 bg-white border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
+                              value={lead.phone}
+                              onChange={(e) => updatePhone(lead.id!, e.target.value)}
+                              onBlur={() => setEditingPhoneId(null)}
+                            />
+                            <button 
+                              onClick={() => setEditingPhoneId(null)}
+                              className="p-1 bg-green-50 text-green-600 rounded-lg"
+                            >
+                              <Check className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center space-x-2 group cursor-pointer" onClick={() => setEditingPhoneId(lead.id!)}>
+                            <span className={cn(
+                              "text-gray-600 font-medium",
+                              phoneCounts[lead.phone] > 1 && "text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100"
+                            )}>
+                              +90 {lead.phone}
+                            </span>
+                            <Pencil className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        )}
                         <div className="flex items-center gap-1">
                           <a 
                             href={`https://wa.me/90${lead.phone}`}

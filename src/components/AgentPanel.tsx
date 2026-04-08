@@ -4,6 +4,7 @@ import { db } from '../firebase';
 import { Lead, User, LeadStatus } from '../types';
 import { Phone, LogOut, Search, MessageCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
+import Countdown from './Countdown';
 
 interface AgentPanelProps {
   user: User;
@@ -95,6 +96,7 @@ export default function AgentPanel({ user, onLogout }: AgentPanelProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Countdown />
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">

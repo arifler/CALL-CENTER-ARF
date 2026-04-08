@@ -1,5 +1,5 @@
 {
-  "name": "Call Center Panel",
+  "name": "2026 Kurban Data Arama",
   "description": "A call center management panel with user-based lead assignment, Excel data import, and status tracking (Negative, Undecided, Positive).",
   "requestFramePermissions": []
 }
