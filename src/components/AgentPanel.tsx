@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, where, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Lead, User, LeadStatus } from '../types';
-import { Phone, LogOut, Search, MessageCircle } from 'lucide-react';
+import { Phone, LogOut, Search, MessageCircle, UserPlus } from 'lucide-react';
 import { cn } from '../lib/utils';
 import Countdown from './Countdown';
+import AddLeadModal from './AddLeadModal';
 
 interface AgentPanelProps {
   user: User;
@@ -15,6 +16,7 @@ export default function AgentPanel({ user, onLogout }: AgentPanelProps) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   useEffect(() => {
     const q = query(
@@ -110,6 +112,13 @@ export default function AgentPanel({ user, onLogout }: AgentPanelProps) {
           </div>
           
           <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-100 font-bold text-sm"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span className="hidden sm:inline">Yeni Kayıt</span>
+            </button>
             <button 
               onClick={onLogout}
               className="p-2 text-gray-400 hover:text-red-500 transition-colors flex items-center space-x-2"
@@ -148,9 +157,9 @@ export default function AgentPanel({ user, onLogout }: AgentPanelProps) {
               key={lead.id}
               className={cn(
                 "p-4 rounded-2xl border transition-all shadow-sm relative overflow-hidden",
-                lead.status === 'positive' && "bg-green-50 border-green-100",
-                lead.status === 'undecided' && "bg-orange-50 border-orange-100",
-                lead.status === 'negative' && "bg-red-50 border-red-100",
+                lead.status === 'positive' && "bg-green-100 border-green-200",
+                lead.status === 'undecided' && "bg-orange-100 border-orange-200",
+                lead.status === 'negative' && "bg-red-100 border-red-200",
                 lead.status === 'pending' && "bg-white border-gray-100"
               )}
             >
@@ -254,9 +263,9 @@ export default function AgentPanel({ user, onLogout }: AgentPanelProps) {
                     key={lead.id} 
                     className={cn(
                       "transition-colors",
-                      lead.status === 'positive' && "bg-green-50 hover:bg-green-100",
-                      lead.status === 'undecided' && "bg-orange-50 hover:bg-orange-100",
-                      lead.status === 'negative' && "bg-red-50 hover:bg-red-100",
+                      lead.status === 'positive' && "bg-green-100 hover:bg-green-200/70",
+                      lead.status === 'undecided' && "bg-orange-100 hover:bg-orange-200/70",
+                      lead.status === 'negative' && "bg-red-100 hover:bg-red-200/70",
                       lead.status === 'pending' && "hover:bg-gray-50"
                     )}
                   >
@@ -334,6 +343,11 @@ export default function AgentPanel({ user, onLogout }: AgentPanelProps) {
           </div>
         </div>
       </main>
+      <AddLeadModal 
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        currentUser={user}
+      />
     </div>
   );
 }

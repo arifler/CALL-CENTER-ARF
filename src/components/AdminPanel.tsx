@@ -3,9 +3,10 @@ import { collection, onSnapshot, query, orderBy, serverTimestamp, writeBatch, do
 import { db } from '../firebase';
 import { Lead, User, LeadStatus } from '../types';
 import * as XLSX from 'xlsx';
-import { Upload, Users, CheckCircle, XCircle, Clock, Search, LogOut, Download, Trash2, AlertCircle, Phone, UserCircle, Pencil, Check, MessageCircle } from 'lucide-react';
+import { Upload, Users, CheckCircle, XCircle, Clock, Search, LogOut, Download, Trash2, AlertCircle, Phone, UserCircle, Pencil, Check, MessageCircle, UserPlus } from 'lucide-react';
 import { cn } from '../lib/utils';
 import Countdown from './Countdown';
+import AddLeadModal from './AddLeadModal';
 
 interface AdminPanelProps {
   user: User;
@@ -23,6 +24,7 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [editingMulahazaId, setEditingMulahazaId] = useState<string | null>(null);
   const [editingPhoneId, setEditingPhoneId] = useState<string | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
   const [userFilter, setUserFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('all');
@@ -303,6 +305,13 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
           </div>
           
           <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-100 font-bold text-sm"
+            >
+              <UserPlus className="w-4 h-4" />
+              Yeni Kayıt
+            </button>
             <span className="text-sm font-medium text-gray-600">Hoş geldin, {user.name}</span>
             <button 
               onClick={onLogout}
@@ -486,9 +495,9 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
               key={lead.id}
               className={cn(
                 "p-4 rounded-2xl border transition-all shadow-sm relative overflow-hidden",
-                lead.status === 'positive' && "bg-green-50 border-green-100",
-                lead.status === 'undecided' && "bg-orange-50 border-orange-100",
-                lead.status === 'negative' && "bg-red-50 border-red-100",
+                lead.status === 'positive' && "bg-green-100 border-green-200",
+                lead.status === 'undecided' && "bg-orange-100 border-orange-200",
+                lead.status === 'negative' && "bg-red-100 border-red-200",
                 lead.status === 'pending' && "bg-white border-gray-100"
               )}
             >
@@ -674,9 +683,9 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
                     key={lead.id} 
                     className={cn(
                       "transition-colors",
-                      lead.status === 'positive' && "bg-green-50 hover:bg-green-100",
-                      lead.status === 'undecided' && "bg-orange-50 hover:bg-orange-100",
-                      lead.status === 'negative' && "bg-red-50 hover:bg-red-100",
+                      lead.status === 'positive' && "bg-green-100 hover:bg-green-200/70",
+                      lead.status === 'undecided' && "bg-orange-100 hover:bg-orange-200/70",
+                      lead.status === 'negative' && "bg-red-100 hover:bg-red-200/70",
                       lead.status === 'pending' && "hover:bg-gray-50"
                     )}
                   >
@@ -939,6 +948,13 @@ export default function AdminPanel({ user, onLogout }: AdminPanelProps) {
           </div>
         </div>
       )}
+
+      <AddLeadModal 
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        currentUser={user}
+        users={users}
+      />
     </div>
   );
 }

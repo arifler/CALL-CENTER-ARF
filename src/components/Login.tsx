@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
-import { User } from '../types';
-import { LogIn, UserCircle, Lock, AlertCircle, ChevronRight } from 'lucide-react';
+import { User, Lead } from '../types';
+import { LogIn, UserCircle, Lock, AlertCircle, ChevronRight, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { cn } from '../lib/utils';
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -11,14 +12,15 @@ interface LoginProps {
 
 export default function Login({ onLogin }: LoginProps) {
   const [users, setUsers] = useState<User[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPasswordModal, setShowPasswordModal] = useState<User | null>(null);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const q = query(collection(db, 'users'), orderBy('name'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const qUsers = query(collection(db, 'users'), orderBy('name'));
+    const unsubscribeUsers = onSnapshot(qUsers, (snapshot) => {
       const userList = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -29,11 +31,31 @@ export default function Login({ onLogin }: LoginProps) {
       }
       
       setUsers(userList);
+    });
+
+    const qLeads = query(collection(db, 'leads'));
+    const unsubscribeLeads = onSnapshot(qLeads, (snapshot) => {
+      const leadList = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Lead[];
+      setLeads(leadList);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeUsers();
+      unsubscribeLeads();
+    };
   }, []);
+
+  const getUserStats = (userName: string) => {
+    const userLeads = leads.filter(l => l.assignedTo === userName);
+    const total = userLeads.length;
+    const processed = userLeads.filter(l => l.status !== 'pending').length;
+    const percentage = total > 0 ? Math.round((processed / total) * 100) : 0;
+    return { total, processed, percentage };
+  };
 
   const handleUserClick = (user: User) => {
     const isAdmin = user.role === 'admin' || user.name.toLowerCase() === 'admin';
@@ -104,27 +126,60 @@ export default function Login({ onLogin }: LoginProps) {
         </div>
 
         <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-          {users.filter(u => u.name.toLowerCase() !== 'admin').map((user, index) => (
-            <motion.button
-              key={user.id || user.name}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 + index * 0.05 }}
-              onClick={() => handleUserClick(user)}
-              className="w-full flex items-center justify-between p-4 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-blue-500 hover:shadow-md hover:shadow-blue-500/5 transition-all group text-left"
-            >
-              <div className="flex items-center">
-                <div className="w-12 h-12 rounded-xl bg-white border border-gray-100 flex items-center justify-center mr-4 group-hover:bg-blue-50 transition-colors shadow-sm">
-                  <UserCircle className="w-7 h-7 text-gray-400 group-hover:text-blue-600 transition-colors" />
+          {users.filter(u => u.name.toLowerCase() !== 'admin').map((user, index) => {
+            const stats = getUserStats(user.name);
+            return (
+              <motion.button
+                key={user.id || user.name}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 + index * 0.05 }}
+                onClick={() => handleUserClick(user)}
+                className="w-full flex flex-col p-4 rounded-2xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-blue-500 hover:shadow-md hover:shadow-blue-500/5 transition-all group text-left"
+              >
+                <div className="flex items-center justify-between w-full mb-3">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 rounded-xl bg-white border border-gray-100 flex items-center justify-center mr-4 group-hover:bg-blue-50 transition-colors shadow-sm">
+                      <UserCircle className="w-7 h-7 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors">{user.name}</p>
+                    </div>
+                  </div>
+                  <div className={cn(
+                    "px-2 py-1 rounded-lg text-[10px] font-bold",
+                    stats.percentage >= 80 ? "bg-green-100 text-green-700" :
+                    stats.percentage >= 50 ? "bg-orange-100 text-orange-700" :
+                    "bg-blue-100 text-blue-700"
+                  )}>
+                    %{stats.percentage}
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors">{user.name}</p>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold mt-0.5">{user.role}</p>
+                
+                <div className="flex items-center justify-between w-full mb-2">
+                  <div className="flex items-center gap-1.5">
+                    <Activity className="w-3 h-3 text-gray-400" />
+                    <span className="text-[11px] font-medium text-gray-500">
+                      {stats.processed} / {stats.total} İşlem Tamamlandı
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
-            </motion.button>
-          ))}
+
+                <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${stats.percentage}%` }}
+                    className={cn(
+                      "h-full transition-all duration-500",
+                      stats.percentage >= 80 ? "bg-green-500" :
+                      stats.percentage >= 50 ? "bg-orange-500" :
+                      "bg-blue-500"
+                    )}
+                  />
+                </div>
+              </motion.button>
+            );
+          })}
         </div>
       </motion.div>
 
